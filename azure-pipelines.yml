@@ -1,0 +1,95 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- master
+
+pool: default
+  #vmImage: ubuntu-latest
+stages:
+  - stage: tfvalidate
+    jobs:
+      - job: validate
+        steps:
+        - task: TerraformInstaller@1
+          displayName: Installing Terraform
+          inputs:
+            terraformVersion: 'latest'
+        - task: TerraformTaskV4@4
+          displayName: Intializing
+          inputs:
+            provider: 'azurerm'
+            command: 'init'
+            backendServiceArm: 'adocon'
+            backendAzureRmResourceGroupName: 'terraformstorage'
+            backendAzureRmStorageAccountName: 'terraformgopal'
+            backendAzureRmContainerName: 'tfstate'
+            backendAzureRmKey: 'ado.tfstate'
+        - task: TerraformTaskV4@4
+          displayName: Validating my code
+          inputs:
+            provider: 'azurerm'
+            command: 'validate'
+  - stage: tfplan
+    jobs:
+      - job: plan
+        steps:
+        - task: TerraformInstaller@1
+          displayName: Installing Terraform
+          inputs:
+            terraformVersion: 'latest'
+        - task: TerraformTaskV4@4
+          displayName: Intializing
+          inputs:
+            provider: 'azurerm'
+            command: 'init'
+            backendServiceArm: 'adocon'
+            backendAzureRmResourceGroupName: 'terraformstorage'
+            backendAzureRmStorageAccountName: 'terraformgopal'
+            backendAzureRmContainerName: 'tfstate'
+            backendAzureRmKey: 'ado.tfstate'
+        - task: TerraformTaskV4@4
+          displayName: planning to go to moon
+          inputs:
+            provider: 'azurerm'
+            command: 'plan'
+            environmentServiceNameAzureRM: 'adocon'
+  - stage: tfapproval
+    jobs:
+      - job: approval
+        pool: server #this task will be completed by ado
+        timeoutInMinutes: 2
+        steps:
+          - task: ManualValidation@1
+            displayName: validate the task
+            inputs:
+              notifyUsers: 'gopal1409@gmail.com'
+              instructions: 'approve it'
+  - stage: tfapply
+    jobs:
+      - job: apply
+        steps:
+        - task: TerraformInstaller@1
+          displayName: Installing Terraform
+          inputs:
+            terraformVersion: 'latest'
+        - task: TerraformTaskV4@4
+          displayName: Intializing
+          inputs:
+            provider: 'azurerm'
+            command: 'init'
+            backendServiceArm: 'adocon'
+            backendAzureRmResourceGroupName: 'terraformstorage'
+            backendAzureRmStorageAccountName: 'terraformgopal'
+            backendAzureRmContainerName: 'tfstate'
+            backendAzureRmKey: 'ado.tfstate'
+        - task: TerraformTaskV4@4
+          displayName: landed in moon
+          inputs:
+            provider: 'azurerm'
+            command: 'apply'
+            environmentServiceNameAzureRM: 'adocon'
+        
+
